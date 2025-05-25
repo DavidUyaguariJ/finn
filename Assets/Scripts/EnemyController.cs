@@ -6,7 +6,7 @@ public class EnemyController : MonoBehaviour
 {
     public Transform player; 
     public float detectionRadius = 5.0f; 
-    public float speed = 2.0f;
+    public float speed = 0.5f;
     public float fuerzaRebote = 6f;
     public int vida = 3;
 

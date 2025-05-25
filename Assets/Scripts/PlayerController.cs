@@ -6,6 +6,10 @@ public class PlayerController : MonoBehaviour
 {
     public float velocidad = 5f;
     public int vida = 3;
+    public float timeByStep = 0.25f;
+    float cont = 0f;
+    public bool stepOne = false;
+    public bool fall = false;
 
     public float fuerzaSalto = 10f; 
     public float fuerzaRebote = 6f; 
@@ -17,16 +21,16 @@ public class PlayerController : MonoBehaviour
     private bool atacando;
     public bool muerto;
 
+    public PlayerSoundController playerSoundController;
+
     private Rigidbody2D rb; 
 
     public Animator animator;
-    // Start is called before the first frame update
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (!muerto)
@@ -34,17 +38,22 @@ public class PlayerController : MonoBehaviour
             if (!atacando)
             {
                 Movimiento();
-
                 RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, longitudRaycast, capaSuelo);
                 enSuelo = hit.collider != null;
 
                 if (enSuelo && Input.GetKeyDown(KeyCode.Space) && !recibiendoDanio)
                 {
+                    fall = true;
+                    playerSoundController.jumpPlayer();
                     rb.AddForce(new Vector2(0f, fuerzaSalto), ForceMode2D.Impulse);
+                }
+                if (enSuelo) 
+                {
+                    fall = false;
                 }
             }
 
-            if (Input.GetKeyDown(KeyCode.Z) && !atacando && enSuelo)
+            if (Input.GetKeyDown(KeyCode.F) && !atacando && enSuelo)
             {
                 Atacando();
             }
@@ -60,6 +69,23 @@ public class PlayerController : MonoBehaviour
     {
         float velocidadX = Input.GetAxis("Horizontal") * Time.deltaTime * velocidad;
 
+        if (velocidadX !=0 && enSuelo && !recibiendoDanio && !atacando && !fall) 
+        {
+            cont  += Time.deltaTime;
+            if (cont >= timeByStep)
+            {
+                cont = 0f;
+                if (stepOne)
+                {
+                    playerSoundController.stepOnePlayer();
+                }
+                else
+                {
+                    playerSoundController.stepTwoPlayer();
+                }
+                stepOne = !stepOne;
+            }   
+        }
         animator.SetFloat("movement", velocidadX * velocidad);
 
         if (velocidadX < 0)
@@ -80,10 +106,12 @@ public class PlayerController : MonoBehaviour
     {
         if(!recibiendoDanio)
         {
+            playerSoundController.damagePlayer();
             recibiendoDanio = true;
             vida -= cantDanio;
             if (vida<=0)
             {
+                playerSoundController.deadPlayer();
                 muerto = true;
             }
             if (!muerto)
@@ -102,6 +130,7 @@ public class PlayerController : MonoBehaviour
 
     public void Atacando()
     {
+        playerSoundController.attackPlayer();
         atacando = true;
     }
 
